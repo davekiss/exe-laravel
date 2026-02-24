@@ -48,5 +48,56 @@ case "$cmd" in
         result=$(ssh exe.dev ls --json)
         echo "$result" | jq -r '.vms[] | select(.image | contains("exe-laravel")) | "\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz"' | column -t -s $'\t'
         ;;
+    ssh)
+        name="${1:?Usage: exe-laravel ssh <name>}"
+        ssh "${name}.exe.xyz"
+        ;;
+    open)
+        name="${1:?Usage: exe-laravel open <name>}"
+        open "https://${name}.exe.xyz" 2>/dev/null || xdg-open "https://${name}.exe.xyz" 2>/dev/null || echo "https://${name}.exe.xyz"
+        ;;
+    share)
+        name="${1:?Usage: exe-laravel share <name>}"
+        ssh exe.dev share set-public "$name"
+        echo "App is now public: https://${name}.exe.xyz"
+        ;;
+    unshare)
+        name="${1:?Usage: exe-laravel unshare <name>}"
+        ssh exe.dev share set-private "$name"
+        echo "App is now private: https://${name}.exe.xyz"
+        ;;
+    destroy)
+        name="${1:?Usage: exe-laravel destroy <name>}"
+        read -p "Delete VM '$name' and all its data? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            ssh exe.dev rm "$name"
+            echo "Deleted: $name"
+        else
+            echo "Cancelled."
+        fi
+        ;;
+    clone)
+        name="${1:?Usage: exe-laravel clone <name> [new-name]}"
+        new_name="${2:-}"
+        if [[ -n "$new_name" ]]; then
+            ssh exe.dev cp "$name" "$new_name"
+        else
+            ssh exe.dev cp "$name"
+        fi
+        ;;
+    logs)
+        name="${1:?Usage: exe-laravel logs <name>}"
+        ssh "${name}.exe.xyz" tail -f /home/exedev/app/storage/logs/laravel.log
+        ;;
+    artisan)
+        name="${1:?Usage: exe-laravel artisan <name> <command...>}"
+        shift
+        ssh "${name}.exe.xyz" "cd /home/exedev/app && php artisan $*"
+        ;;
+    agent)
+        name="${1:?Usage: exe-laravel agent <name>}"
+        open "https://${name}.exe.xyz:9999/" 2>/dev/null || xdg-open "https://${name}.exe.xyz:9999/" 2>/dev/null || echo "https://${name}.exe.xyz:9999/"
+        ;;
     *) echo "Unknown command: $cmd"; usage; exit 1 ;;
 esac
