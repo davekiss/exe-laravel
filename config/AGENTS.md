@@ -8,7 +8,7 @@ Changes you make are immediately visible at the VM's public URL.
 - **App root:** /home/exedev/app
 - **Web server:** nginx serving /home/exedev/app/public on port 80
 - **PHP:** 8.4 with php-fpm
-- **Database:** PostgreSQL 16 (database: laravel, user: exedev, no password, peer auth)
+- **Database:** PostgreSQL 16 (database: app, user: exedev, no password, trust auth)
 - **Node.js:** 22 LTS with npm
 - **Frontend:** Vite (run `npm run dev` for HMR or `npm run build` for production)
 
@@ -24,7 +24,7 @@ php artisan make:livewire ComponentName
 php artisan tinker
 
 # Database
-psql laravel                    # connect to database
+psql app                        # connect to database
 php artisan migrate:fresh --seed # reset database
 
 # Frontend
