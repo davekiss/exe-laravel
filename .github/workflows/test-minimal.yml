@@ -26,13 +26,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push noop image (OCI format)
+      - name: Build and push noop image (OCI index with platform)
         run: |
           echo 'FROM ghcr.io/boldsoftware/exeuntu:latest
           LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
           RUN echo noop' > Dockerfile.noop
           docker buildx build -f Dockerfile.noop \
-            --output type=image,name=$IMAGE:noop-oci,push=true,oci-mediatypes=true \
+            --platform linux/amd64 \
+            --output type=image,name=$IMAGE:noop-oci2,push=true,oci-mediatypes=true \
             --provenance=false \
             --sbom=false \
             .
+
+      - name: Verify manifest format
+        run: |
+          docker manifest inspect $IMAGE:noop-oci2 | head -20
