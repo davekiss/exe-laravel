@@ -45,7 +45,7 @@ Built on `exeuntu` (Ubuntu 24.04 + systemd + Shelley + Claude Code + Codex + Doc
 ### Added by exe-laravel image
 
 **Runtime:**
-- PHP 8.3+ with extensions: pgsql, mbstring, xml, curl, zip, bcmath, intl, redis, gd
+- PHP 8.4 with extensions: pgsql, mbstring, xml, curl, zip, bcmath, intl, redis, gd
 - PostgreSQL 16 (auto-started via systemd)
 - Composer 2.x
 - Node.js 22 LTS + npm (for Vite/frontend)
