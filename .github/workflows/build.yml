@@ -46,3 +46,4 @@ jobs:
           tags: ${{ env.IMAGE }}:${{ steps.version.outputs.tag }}
           provenance: false
           sbom: false
+          outputs: type=image,oci-mediatypes=true

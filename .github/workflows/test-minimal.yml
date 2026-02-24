@@ -32,8 +32,7 @@ jobs:
           LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
           RUN echo noop' > Dockerfile.noop
           docker buildx build -f Dockerfile.noop \
-            --push \
-            --tag $IMAGE:noop-oci \
+            --output type=image,name=$IMAGE:noop-oci,push=true,oci-mediatypes=true \
             --provenance=false \
             --sbom=false \
             .
