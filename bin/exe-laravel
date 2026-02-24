@@ -33,6 +33,19 @@ Examples:
     exe-laravel new my-app --react            # Inertia + React
     exe-laravel new my-app --vue --pest       # Vue + Pest
     exe-laravel new my-app --livewire         # Livewire
+
+Workflow:
+    Each VM is a live server. There is no deployment pipeline.
+    Create a VM, SSH in, and start coding — changes are immediately
+    live at https://<name>.exe.xyz.
+
+    1. exe-laravel new my-app --react     # create VM + install Laravel
+    2. ssh my-app.exe.xyz                 # SSH in and start building
+    3. # edit code, run artisan/npm — app is always live
+
+    The app lives at /home/exedev/app. PHP changes are instant.
+    Run 'npm run build' after frontend changes.
+    See AGENTS.md in the app root for full environment details.
 EOF
 }
 
@@ -139,7 +152,11 @@ case "$cmd" in
         echo "  SSH:     ssh ${name}.exe.xyz"
         echo "  Shelley: https://${name}.exe.xyz:9999/"
         echo ""
-        echo "Your Laravel app is live. Connect an agent and start building."
+        echo "Your app is live. SSH in and start building:"
+        echo "  ssh ${name}.exe.xyz"
+        echo ""
+        echo "Code is at /home/exedev/app. Changes are immediately live."
+        echo "See AGENTS.md in the app root for environment details."
         ;;
     list)
         result=$(ssh exe.dev ls --json)
