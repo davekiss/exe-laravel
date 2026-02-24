@@ -28,5 +28,21 @@ shift || true
 
 case "$cmd" in
     help|--help|-h) usage ;;
+    new)
+        name="${1:-}"
+        args="--image=$IMAGE --json"
+        if [[ -n "$name" ]]; then
+            args="$args --name=$name"
+        fi
+        result=$(ssh exe.dev new $args)
+        vm_name=$(echo "$result" | jq -r '.vm_name')
+        echo "Created Laravel app: $vm_name"
+        echo ""
+        echo "  App:     https://${vm_name}.exe.xyz"
+        echo "  SSH:     ssh ${vm_name}.exe.xyz"
+        echo "  Shelley: https://${vm_name}.exe.xyz:9999/"
+        echo ""
+        echo "Your Laravel app is live. Connect an agent and start building."
+        ;;
     *) echo "Unknown command: $cmd"; usage; exit 1 ;;
 esac
