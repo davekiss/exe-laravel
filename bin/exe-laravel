@@ -112,6 +112,9 @@ case "$cmd" in
             exit 1
         }
 
+        # Point exe.dev proxy to nginx on port 8080
+        ssh -o StrictHostKeyChecking=no exe.dev share port "$name" 8080 2>/dev/null || true
+
         # Wait for SSH to become available
         echo "Waiting for SSH..."
         ssh_ready=false
