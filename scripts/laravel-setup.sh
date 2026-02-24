@@ -19,8 +19,9 @@ for i in $(seq 1 30); do
 done
 
 # Create PostgreSQL user and database if they don't exist
+# The database name "app" matches what `laravel new app` puts in .env
 sudo -u postgres createuser -s exedev 2>/dev/null || true
-sudo -u postgres createdb -O exedev laravel 2>/dev/null || true
+sudo -u postgres createdb -O exedev app 2>/dev/null || true
 
 cd /home/exedev
 
@@ -37,14 +38,16 @@ laravel new app \
 
 cd app
 
-# Configure .env for local PostgreSQL (peer auth, no password)
+# Configure .env for local PostgreSQL (trust auth, no password)
 sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
 sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env
 sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env
+sed -i 's/^DB_DATABASE=.*/DB_DATABASE=app/' .env
 
 sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env.example
 sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env.example
 sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env.example
+sed -i 's/^DB_DATABASE=.*/DB_DATABASE=app/' .env.example
 
 # Copy exe.dev AGENTS.md
 cp /usr/local/share/exe-laravel/AGENTS.md ./AGENTS.md

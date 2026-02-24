@@ -19,9 +19,6 @@ exe-laravel new my-app --livewire
 
 # Open it
 exe-laravel open my-app
-
-# Or use the image directly
-ssh exe.dev new --image=ghcr.io/davekiss/exe-laravel --name=my-app
 ```
 
 ## Commands
@@ -54,9 +51,11 @@ Pass these flags to `exe-laravel new` to choose a starter kit:
 
 These flags are passed directly to `laravel new`. Any flag supported by `laravel new` will work.
 
-## What's in the Image
+## How It Works
 
-Infrastructure-only — no app is baked in. The Laravel app is created at runtime via `laravel new`.
+Each VM is cloned from a pre-configured template with all infrastructure installed. No app is baked in — the Laravel app is created at runtime via `laravel new`.
+
+**What's in each VM:**
 
 - PHP 8.4 + php-fpm
 - PostgreSQL 16
@@ -67,6 +66,6 @@ Infrastructure-only — no app is baked in. The Laravel app is created at runtim
 - Redis
 - AGENTS.md for coding agents
 
-When you run `exe-laravel new`, the CLI creates the VM, waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.
+When you run `exe-laravel new`, the CLI clones the template VM (~2 seconds), waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.
 
 Built on [exeuntu](https://github.com/boldsoftware/exeuntu) — includes Shelley, Claude Code, Codex, Docker, and more.

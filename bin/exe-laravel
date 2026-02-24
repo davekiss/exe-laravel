@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="ghcr.io/davekiss/exe-laravel:0.3.0"
-VERSION="0.3.0"
+TEMPLATE_VM="laravel-template"
+VERSION="0.4.0"
 
 usage() {
     cat <<EOF
@@ -84,30 +84,26 @@ case "$cmd" in
 
         check_exe_dev
 
-        create_args="--image=$IMAGE --json"
-        if [[ -n "$name" ]]; then
-            create_args="$create_args --name=$name"
+        # Clone the golden template VM
+        if [[ -z "$name" ]]; then
+            echo "Error: VM name is required."
+            echo "Usage: exe-laravel new <name> [flags]"
+            exit 1
         fi
 
         echo "Creating VM..."
-        result=$(ssh -o StrictHostKeyChecking=no exe.dev new $create_args 2>&1) || {
+        ssh -o StrictHostKeyChecking=no exe.dev cp "$TEMPLATE_VM" "$name" || {
             echo "Error: Failed to create VM."
-            echo "$result"
+            echo ""
+            echo "Make sure the template VM '$TEMPLATE_VM' exists."
             exit 1
         }
-
-        vm_name=$(echo "$result" | jq -r '.vm_name' 2>/dev/null)
-        if [[ -z "$vm_name" || "$vm_name" == "null" ]]; then
-            echo "Error: Failed to parse VM name from response."
-            echo "$result"
-            exit 1
-        fi
 
         # Wait for SSH to become available
         echo "Waiting for SSH..."
         ssh_ready=false
-        for i in $(seq 1 60); do
-            if ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" true 2>/dev/null; then
+        for i in $(seq 1 30); do
+            if ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no "${name}.exe.xyz" true 2>/dev/null; then
                 ssh_ready=true
                 break
             fi
@@ -115,39 +111,39 @@ case "$cmd" in
         done
 
         if [[ "$ssh_ready" != "true" ]]; then
-            echo "Error: SSH did not become available after 2 minutes."
+            echo "Error: SSH did not become available after 60 seconds."
             echo "The VM was created but setup could not complete."
             echo ""
             echo "Try connecting manually:"
-            echo "  ssh ${vm_name}.exe.xyz"
+            echo "  ssh ${name}.exe.xyz"
             echo "  laravel-setup ${setup_flags[*]:-}"
             exit 1
         fi
 
         # Run laravel-setup on the VM with collected flags
         echo "Setting up Laravel..."
-        ssh -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}" || {
+        ssh -o StrictHostKeyChecking=no "${name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}" || {
             echo ""
             echo "Error: Laravel setup failed."
             echo ""
             echo "The VM is running. You can retry manually:"
-            echo "  ssh ${vm_name}.exe.xyz"
+            echo "  ssh ${name}.exe.xyz"
             echo "  laravel-setup ${setup_flags[*]:-}"
             exit 1
         }
 
         echo ""
-        echo "Created Laravel app: $vm_name"
+        echo "Created Laravel app: $name"
         echo ""
-        echo "  App:     https://${vm_name}.exe.xyz"
-        echo "  SSH:     ssh ${vm_name}.exe.xyz"
-        echo "  Shelley: https://${vm_name}.exe.xyz:9999/"
+        echo "  App:     https://${name}.exe.xyz"
+        echo "  SSH:     ssh ${name}.exe.xyz"
+        echo "  Shelley: https://${name}.exe.xyz:9999/"
         echo ""
         echo "Your Laravel app is live. Connect an agent and start building."
         ;;
     list)
         result=$(ssh exe.dev ls --json)
-        echo "$result" | jq -r '.vms[] | select(.image | contains("exe-laravel")) | "\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz"' | column -t -s $'\t'
+        echo "$result" | jq -r ".vms[] | select(.vm_name != \"$TEMPLATE_VM\") | \"\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz\"" | column -t -s $'\t'
         ;;
     ssh)
         name="${1:?Usage: exe-laravel ssh <name>}"
