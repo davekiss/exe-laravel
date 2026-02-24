@@ -10,6 +10,18 @@ fi
 
 export PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
+# Wait for PostgreSQL to be ready
+for i in $(seq 1 30); do
+    if pg_isready -q 2>/dev/null; then
+        break
+    fi
+    sleep 1
+done
+
+# Create PostgreSQL user and database if they don't exist
+sudo -u postgres createuser -s exedev 2>/dev/null || true
+sudo -u postgres createdb -O exedev laravel 2>/dev/null || true
+
 cd /home/exedev
 
 # Run laravel new with passthrough flags

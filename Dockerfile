@@ -1,5 +1,7 @@
 FROM ghcr.io/boldsoftware/exeuntu:latest
 
+LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
+
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 # Add Ondrej PPA for PHP 8.4 (Ubuntu 24.04 ships 8.3)
@@ -39,12 +41,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y postgresql postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
-# Configure PostgreSQL: create database and user for Laravel
-COPY scripts/setup-postgres.sh /usr/local/bin/setup-postgres.sh
-RUN chmod +x /usr/local/bin/setup-postgres.sh
-RUN /usr/local/bin/setup-postgres.sh
-
 # Enable PostgreSQL to start on boot via systemd
+# NOTE: apt auto-creates a cluster during install. We do NOT run setup-postgres.sh
+# during build anymore — DB user/database are created at runtime by laravel-setup.
 RUN systemctl enable postgresql
 
 # Install Composer

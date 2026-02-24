@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="ghcr.io/davekiss/exe-laravel"
-VERSION="0.1.0"
+IMAGE="ghcr.io/davekiss/exe-laravel:0.3.0"
+VERSION="0.3.0"
 
 usage() {
     cat <<EOF
@@ -39,6 +39,34 @@ EOF
 cmd="${1:-help}"
 shift || true
 
+# Check exe.dev connectivity and registration
+check_exe_dev() {
+    local output
+    output=$(ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no exe.dev version 2>&1) || true
+
+    if echo "$output" | grep -qi "permission denied"; then
+        echo "Error: SSH authentication failed."
+        echo ""
+        echo "Make sure your SSH key is added to exe.dev:"
+        echo "  1. Run: ssh exe.dev"
+        echo "  2. Follow the registration steps"
+        echo ""
+        echo "If you've already registered, make sure your SSH key is loaded:"
+        echo "  ssh-add ~/.ssh/id_ed25519"
+        exit 1
+    fi
+
+    if echo "$output" | grep -qi "complete registration"; then
+        echo "Error: exe.dev registration incomplete."
+        echo ""
+        echo "Complete registration by running:"
+        echo "  ssh exe.dev"
+        echo ""
+        echo "Then try again."
+        exit 1
+    fi
+}
+
 case "$cmd" in
     help|--help|-h) usage ;;
     new)
@@ -54,27 +82,59 @@ case "$cmd" in
             fi
         done
 
+        check_exe_dev
+
         create_args="--image=$IMAGE --json"
         if [[ -n "$name" ]]; then
             create_args="$create_args --name=$name"
         fi
 
         echo "Creating VM..."
-        result=$(ssh exe.dev new $create_args)
-        vm_name=$(echo "$result" | jq -r '.vm_name')
+        result=$(ssh -o StrictHostKeyChecking=no exe.dev new $create_args 2>&1) || {
+            echo "Error: Failed to create VM."
+            echo "$result"
+            exit 1
+        }
+
+        vm_name=$(echo "$result" | jq -r '.vm_name' 2>/dev/null)
+        if [[ -z "$vm_name" || "$vm_name" == "null" ]]; then
+            echo "Error: Failed to parse VM name from response."
+            echo "$result"
+            exit 1
+        fi
 
         # Wait for SSH to become available
         echo "Waiting for SSH..."
+        ssh_ready=false
         for i in $(seq 1 60); do
             if ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" true 2>/dev/null; then
+                ssh_ready=true
                 break
             fi
             sleep 2
         done
 
+        if [[ "$ssh_ready" != "true" ]]; then
+            echo "Error: SSH did not become available after 2 minutes."
+            echo "The VM was created but setup could not complete."
+            echo ""
+            echo "Try connecting manually:"
+            echo "  ssh ${vm_name}.exe.xyz"
+            echo "  laravel-setup ${setup_flags[*]:-}"
+            exit 1
+        fi
+
         # Run laravel-setup on the VM with collected flags
         echo "Setting up Laravel..."
-        ssh -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}"
+        ssh -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}" || {
+            echo ""
+            echo "Error: Laravel setup failed."
+            echo ""
+            echo "The VM is running. You can retry manually:"
+            echo "  ssh ${vm_name}.exe.xyz"
+            echo "  laravel-setup ${setup_flags[*]:-}"
+            exit 1
+        }
 
         echo ""
         echo "Created Laravel app: $vm_name"

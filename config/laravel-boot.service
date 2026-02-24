@@ -1,12 +1,11 @@
 [Unit]
 Description=Laravel boot tasks (migrations)
 After=postgresql.service
-Requires=postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=oneshot
 User=exedev
-WorkingDirectory=/home/exedev/app
 ExecStart=/usr/local/bin/laravel-boot.sh
 RemainAfterExit=yes
 
