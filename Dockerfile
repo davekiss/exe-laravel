@@ -73,4 +73,12 @@ RUN systemctl enable nginx php8.4-fpm
 COPY config/AGENTS.md /home/exedev/app/AGENTS.md
 RUN chown exedev:exedev /home/exedev/app/AGENTS.md
 
+# Laravel boot migrations service
+COPY scripts/laravel-boot.sh /usr/local/bin/laravel-boot.sh
+RUN chmod +x /usr/local/bin/laravel-boot.sh
+
+COPY config/laravel-boot.service /etc/systemd/system/laravel-boot.service
+RUN chmod 644 /etc/systemd/system/laravel-boot.service && \
+    systemctl enable laravel-boot.service
+
 EXPOSE 80 8000 9999
