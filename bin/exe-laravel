@@ -9,17 +9,30 @@ usage() {
 exe-laravel $VERSION — Laravel on exe.dev
 
 Usage:
-    exe-laravel new [name]        Create a new Laravel VM
-    exe-laravel list              List Laravel VMs
-    exe-laravel ssh <name>        SSH into a VM
-    exe-laravel open <name>       Open app URL in browser
-    exe-laravel share <name>      Make app public
-    exe-laravel unshare <name>    Make app private
-    exe-laravel destroy <name>    Delete a VM
+    exe-laravel new [name] [flags]    Create a new Laravel VM
+    exe-laravel list                  List Laravel VMs
+    exe-laravel ssh <name>            SSH into a VM
+    exe-laravel open <name>           Open app URL in browser
+    exe-laravel share <name>          Make app public
+    exe-laravel unshare <name>        Make app private
+    exe-laravel destroy <name>        Delete a VM
     exe-laravel clone <name> [new-name]  Copy a VM
-    exe-laravel logs <name>       Tail Laravel logs
+    exe-laravel logs <name>           Tail Laravel logs
     exe-laravel artisan <name> <cmd...>  Run artisan command
-    exe-laravel agent <name>      Open Shelley in browser
+    exe-laravel agent <name>          Open Shelley in browser
+
+Starter kit flags for 'new':
+    --react         Inertia + React
+    --vue           Inertia + Vue
+    --livewire      Livewire
+    --pest          Use Pest for testing
+    --typescript    Use TypeScript (with React/Vue)
+
+Examples:
+    exe-laravel new my-app                    # bare Laravel
+    exe-laravel new my-app --react            # Inertia + React
+    exe-laravel new my-app --vue --pest       # Vue + Pest
+    exe-laravel new my-app --livewire         # Livewire
 EOF
 }
 
@@ -29,13 +42,41 @@ shift || true
 case "$cmd" in
     help|--help|-h) usage ;;
     new)
-        name="${1:-}"
-        args="--image=$IMAGE --json"
+        name=""
+        setup_flags=()
+
+        # Parse arguments: first positional arg is the name, rest are flags
+        for arg in "$@"; do
+            if [[ "$arg" == --* ]]; then
+                setup_flags+=("$arg")
+            elif [[ -z "$name" ]]; then
+                name="$arg"
+            fi
+        done
+
+        create_args="--image=$IMAGE --json"
         if [[ -n "$name" ]]; then
-            args="$args --name=$name"
+            create_args="$create_args --name=$name"
         fi
-        result=$(ssh exe.dev new $args)
+
+        echo "Creating VM..."
+        result=$(ssh exe.dev new $create_args)
         vm_name=$(echo "$result" | jq -r '.vm_name')
+
+        # Wait for SSH to become available
+        echo "Waiting for SSH..."
+        for i in $(seq 1 60); do
+            if ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" true 2>/dev/null; then
+                break
+            fi
+            sleep 2
+        done
+
+        # Run laravel-setup on the VM with collected flags
+        echo "Setting up Laravel..."
+        ssh -o StrictHostKeyChecking=no "${vm_name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}"
+
+        echo ""
         echo "Created Laravel app: $vm_name"
         echo ""
         echo "  App:     https://${vm_name}.exe.xyz"

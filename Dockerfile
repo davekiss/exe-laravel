@@ -64,20 +64,24 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Copy nginx config for Laravel
 COPY config/nginx-laravel.conf /etc/nginx/sites-available/default
 
-# Create Laravel project as exedev user
-COPY scripts/setup-laravel.sh /usr/local/bin/setup-laravel.sh
-RUN chmod +x /usr/local/bin/setup-laravel.sh
-
+# Install Laravel installer globally as exedev user
 USER exedev
-RUN /usr/local/bin/setup-laravel.sh
+RUN composer global require laravel/installer
 USER root
+
+# Symlink laravel installer to /usr/local/bin for non-interactive SSH access
+RUN ln -sf /home/exedev/.config/composer/vendor/bin/laravel /usr/local/bin/laravel
+
+# Copy laravel-setup script
+COPY scripts/laravel-setup.sh /usr/local/bin/laravel-setup
+RUN chmod +x /usr/local/bin/laravel-setup
+
+# Store AGENTS.md template for runtime copy
+RUN mkdir -p /usr/local/share/exe-laravel
+COPY config/AGENTS.md /usr/local/share/exe-laravel/AGENTS.md
 
 # Enable nginx and php-fpm on boot
 RUN systemctl enable nginx php8.4-fpm
-
-# Copy Laravel-specific AGENTS.md into the project
-COPY config/AGENTS.md /home/exedev/app/AGENTS.md
-RUN chown exedev:exedev /home/exedev/app/AGENTS.md
 
 # Laravel boot migrations service
 COPY scripts/laravel-boot.sh /usr/local/bin/laravel-boot.sh

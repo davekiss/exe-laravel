@@ -12,6 +12,11 @@ chmod +x /usr/local/bin/exe-laravel
 # Create a new Laravel app
 exe-laravel new my-app
 
+# With a starter kit
+exe-laravel new my-app --react
+exe-laravel new my-app --vue --pest
+exe-laravel new my-app --livewire
+
 # Open it
 exe-laravel open my-app
 
@@ -23,7 +28,7 @@ ssh exe.dev new --image=ghcr.io/davekiss/exe-laravel --name=my-app
 
 | Command | Description |
 |---------|-------------|
-| `exe-laravel new [name]` | Create a new Laravel VM |
+| `exe-laravel new [name] [flags]` | Create a new Laravel VM |
 | `exe-laravel list` | List your Laravel VMs |
 | `exe-laravel ssh <name>` | SSH into a VM |
 | `exe-laravel open <name>` | Open app in browser |
@@ -35,16 +40,33 @@ ssh exe.dev new --image=ghcr.io/davekiss/exe-laravel --name=my-app
 | `exe-laravel artisan <name> <cmd>` | Run artisan remotely |
 | `exe-laravel agent <name>` | Open Shelley |
 
-## What's in the image
+## Starter Kit Flags
+
+Pass these flags to `exe-laravel new` to choose a starter kit:
+
+| Flag | Description |
+|------|-------------|
+| `--react` | Inertia + React |
+| `--vue` | Inertia + Vue |
+| `--livewire` | Livewire |
+| `--pest` | Use Pest for testing |
+| `--typescript` | Use TypeScript (with React/Vue) |
+
+These flags are passed directly to `laravel new`. Any flag supported by `laravel new` will work.
+
+## What's in the Image
+
+Infrastructure-only — no app is baked in. The Laravel app is created at runtime via `laravel new`.
 
 - PHP 8.4 + php-fpm
 - PostgreSQL 16
 - nginx
 - Composer
+- Laravel installer
 - Node.js 22 + npm
 - Redis
-- Fresh Laravel project at `/home/exedev/app`
-- Git initialized
 - AGENTS.md for coding agents
+
+When you run `exe-laravel new`, the CLI creates the VM, waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.
 
 Built on [exeuntu](https://github.com/boldsoftware/exeuntu) — includes Shelley, Claude Code, Codex, Docker, and more.

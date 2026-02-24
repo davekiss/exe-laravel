@@ -1,0 +1,50 @@
+#!/bin/bash
+set -euo pipefail
+
+APP_DIR="/home/exedev/app"
+
+if [ -f "$APP_DIR/artisan" ]; then
+    echo "Laravel app already exists at $APP_DIR"
+    exit 0
+fi
+
+export PATH="$HOME/.config/composer/vendor/bin:$PATH"
+
+cd /home/exedev
+
+# Run laravel new with passthrough flags
+# Always include: pgsql database, boost, npm build, git init, non-interactive
+laravel new app \
+    --database=pgsql \
+    --boost \
+    --npm \
+    --git \
+    --branch=main \
+    --no-interaction \
+    "$@"
+
+cd app
+
+# Configure .env for local PostgreSQL (peer auth, no password)
+sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env
+sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env
+
+sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env.example
+sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env.example
+sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env.example
+
+# Copy exe.dev AGENTS.md
+cp /usr/local/share/exe-laravel/AGENTS.md ./AGENTS.md
+
+# Run migrations (PostgreSQL is running at this point)
+php artisan migrate --force
+
+# Set git identity and commit
+git config user.email "exedev@exe.dev"
+git config user.name "exedev"
+git add -A
+git commit -m "Initial Laravel project"
+
+echo ""
+echo "Laravel app ready at $APP_DIR"

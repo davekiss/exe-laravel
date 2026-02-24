@@ -42,6 +42,16 @@ sudo journalctl -u nginx -f
 sudo journalctl -u php8.4-fpm -f
 ```
 
+## Laravel Boost
+
+This project includes [Laravel Boost](https://github.com/laravel/boost) for AI-assisted development.
+
+- **MCP Server:** `php artisan boost:mcp` — provides tools for inspecting the app, querying the database, searching Laravel docs, and more.
+- **Documentation API:** Use the `Search Docs` MCP tool to look up Laravel framework and ecosystem documentation.
+- **Guidelines:** Boost-generated guidelines are in `CLAUDE.md` (for Claude Code) and agent-specific locations.
+- **Skills:** Agent skills for Livewire, Pest, Tailwind, etc. are installed based on project dependencies.
+- **Update:** Run `php artisan boost:update` after adding new packages to refresh guidelines and skills.
+
 ## Conventions
 
 - This is a live server. Test changes carefully.
