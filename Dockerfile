@@ -54,8 +54,20 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
-# Laravel project setup
-# nginx configuration
+
+# Copy nginx config for Laravel
+COPY config/nginx-laravel.conf /etc/nginx/sites-available/default
+
+# Create Laravel project as exedev user
+COPY scripts/setup-laravel.sh /usr/local/bin/setup-laravel.sh
+RUN chmod +x /usr/local/bin/setup-laravel.sh
+
+USER exedev
+RUN /usr/local/bin/setup-laravel.sh
+USER root
+
+# Enable nginx and php-fpm on boot
+RUN systemctl enable nginx php8.4-fpm
 # Agent guidance files
 
 EXPOSE 80 8000 9999
