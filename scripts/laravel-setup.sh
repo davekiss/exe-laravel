@@ -49,9 +49,8 @@ sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env
 sed -i 's/^DB_DATABASE=.*/DB_DATABASE=app/' .env
 
 # Trust exe.dev reverse proxy (sends X-Forwarded-Proto, X-Forwarded-Host, X-Forwarded-For)
-if ! grep -q '^TRUSTED_PROXIES=' .env; then
-    echo 'TRUSTED_PROXIES=*' >> .env
-fi
+# Laravel 12 requires this in bootstrap/app.php, not just .env
+sed -i "s|\->withMiddleware(function (Middleware \$middleware): void {|->withMiddleware(function (Middleware \$middleware): void {\n        \$middleware->trustProxies(at: '*');|" bootstrap/app.php
 
 # Configure .env.example
 sed -i 's|^APP_URL=.*|APP_URL=https://your-vm.exe.xyz|' .env.example
