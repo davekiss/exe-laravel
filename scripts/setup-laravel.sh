@@ -32,5 +32,7 @@ npm run build
 
 # Initialize git repo
 git init
+git config user.email "exedev@exe.dev"
+git config user.name "exedev"
 git add -A
 git commit -m "Initial Laravel project"
