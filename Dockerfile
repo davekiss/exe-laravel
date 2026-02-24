@@ -33,7 +33,19 @@ RUN sed -i 's/^user = www-data/user = exedev/' /etc/php/8.4/fpm/pool.d/www.conf 
     sed -i 's/^listen.owner = www-data/listen.owner = exedev/' /etc/php/8.4/fpm/pool.d/www.conf && \
     sed -i 's/^listen.group = www-data/listen.group = exedev/' /etc/php/8.4/fpm/pool.d/www.conf && \
     mkdir -p /run/php && chown exedev:exedev /run/php
-# PostgreSQL
+
+# Install PostgreSQL 16
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y postgresql postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure PostgreSQL: create database and user for Laravel
+COPY scripts/setup-postgres.sh /usr/local/bin/setup-postgres.sh
+RUN chmod +x /usr/local/bin/setup-postgres.sh
+RUN /usr/local/bin/setup-postgres.sh
+
+# Enable PostgreSQL to start on boot via systemd
+RUN systemctl enable postgresql
 # Composer
 # Node.js
 # Laravel project setup
