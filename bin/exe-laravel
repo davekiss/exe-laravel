@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IMAGE="ghcr.io/davekiss/exe-laravel"
+VERSION="0.1.0"
+
+usage() {
+    cat <<EOF
+exe-laravel $VERSION — Laravel on exe.dev
+
+Usage:
+    exe-laravel new [name]        Create a new Laravel VM
+    exe-laravel list              List Laravel VMs
+    exe-laravel ssh <name>        SSH into a VM
+    exe-laravel open <name>       Open app URL in browser
+    exe-laravel share <name>      Make app public
+    exe-laravel unshare <name>    Make app private
+    exe-laravel destroy <name>    Delete a VM
+    exe-laravel clone <name> [new-name]  Copy a VM
+    exe-laravel logs <name>       Tail Laravel logs
+    exe-laravel artisan <name> <cmd...>  Run artisan command
+    exe-laravel agent <name>      Open Shelley in browser
+EOF
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+    help|--help|-h) usage ;;
+    *) echo "Unknown command: $cmd"; usage; exit 1 ;;
+esac
