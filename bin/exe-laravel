@@ -44,5 +44,9 @@ case "$cmd" in
         echo ""
         echo "Your Laravel app is live. Connect an agent and start building."
         ;;
+    list)
+        result=$(ssh exe.dev ls --json)
+        echo "$result" | jq -r '.vms[] | select(.image | contains("exe-laravel")) | "\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz"' | column -t -s $'\t'
+        ;;
     *) echo "Unknown command: $cmd"; usage; exit 1 ;;
 esac
