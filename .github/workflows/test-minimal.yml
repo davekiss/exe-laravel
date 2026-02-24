@@ -23,25 +23,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push noop image
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push noop image (OCI format)
         run: |
           echo 'FROM ghcr.io/boldsoftware/exeuntu:latest
           LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
           RUN echo noop' > Dockerfile.noop
-          docker build -f Dockerfile.noop -t $IMAGE:noop .
-          docker push $IMAGE:noop
-
-      - name: Build and push php-only image
-        run: |
-          echo 'FROM ghcr.io/boldsoftware/exeuntu:latest
-          LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
-          SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
-          RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-              apt-get install -y software-properties-common && \
-              add-apt-repository -y ppa:ondrej/php && \
-              apt-get update && \
-              apt-get install -y php8.4-cli && \
-              apt-get clean
-          EXPOSE 80' > Dockerfile.php
-          docker build -f Dockerfile.php -t $IMAGE:php-only .
-          docker push $IMAGE:php-only
+          docker buildx build -f Dockerfile.noop \
+            --push \
+            --tag $IMAGE:noop-oci \
+            --provenance=false \
+            --sbom=false \
+            .
