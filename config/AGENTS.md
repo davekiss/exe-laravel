@@ -61,6 +61,17 @@ This project includes [Laravel Boost](https://github.com/laravel/boost) for AI-a
 - The app uses PostgreSQL — use PostgreSQL-compatible SQL.
 - The `.env` file is already configured. Don't change DB settings unless adding a new database.
 
+## exe.dev HTTPS Proxy
+
+This app is served through exe.dev's reverse proxy:
+- exe.dev terminates TLS and proxies HTTPS requests to nginx on port 80.
+- The proxy sends `X-Forwarded-Proto`, `X-Forwarded-Host`, and `X-Forwarded-For` headers.
+- `TRUSTED_PROXIES=*` is set in `.env` so Laravel trusts these headers.
+- By default, the app is **private** (requires exe.dev login to access).
+- To make public: run `ssh exe.dev share set-public <vm-name>` from outside the VM.
+- Ports 3000-9999 are also forwarded (e.g., Vite dev server on port 5173).
+- Only one port can be made public; additional ports require exe.dev authentication.
+
 ## exe.dev Specifics
 
 - HTTPS proxy docs: https://exe.dev/docs/proxy

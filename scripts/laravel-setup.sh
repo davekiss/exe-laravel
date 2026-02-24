@@ -38,12 +38,23 @@ laravel new app \
 
 cd app
 
-# Configure .env for local PostgreSQL (trust auth, no password)
+# Get VM name for APP_URL
+VM_NAME="${HOSTNAME%%.*}"
+
+# Configure .env for exe.dev environment
+sed -i "s|^APP_URL=.*|APP_URL=https://${VM_NAME}.exe.xyz|" .env
 sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
 sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env
 sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env
 sed -i 's/^DB_DATABASE=.*/DB_DATABASE=app/' .env
 
+# Trust exe.dev reverse proxy (sends X-Forwarded-Proto, X-Forwarded-Host, X-Forwarded-For)
+if ! grep -q '^TRUSTED_PROXIES=' .env; then
+    echo 'TRUSTED_PROXIES=*' >> .env
+fi
+
+# Configure .env.example
+sed -i 's|^APP_URL=.*|APP_URL=https://your-vm.exe.xyz|' .env.example
 sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env.example
 sed -i 's/^DB_USERNAME=.*/DB_USERNAME=exedev/' .env.example
 sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=/' .env.example
