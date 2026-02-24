@@ -55,6 +55,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
+# Install Redis
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y redis-server && \
+    rm -rf /var/lib/apt/lists/* && \
+    systemctl enable redis-server
+
 # Copy nginx config for Laravel
 COPY config/nginx-laravel.conf /etc/nginx/sites-available/default
 
