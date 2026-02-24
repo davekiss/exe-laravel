@@ -68,6 +68,9 @@ USER root
 
 # Enable nginx and php-fpm on boot
 RUN systemctl enable nginx php8.4-fpm
-# Agent guidance files
+
+# Copy Laravel-specific AGENTS.md into the project
+COPY config/AGENTS.md /home/exedev/app/AGENTS.md
+RUN chown exedev:exedev /home/exedev/app/AGENTS.md
 
 EXPOSE 80 8000 9999
