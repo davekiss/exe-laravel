@@ -11,9 +11,8 @@ on:
         options:
           - '0'
           - '1'
-          - '2'
-          - '3'
-          - '4'
+          - '5'
+          - '6'
 
 env:
   IMAGE: ghcr.io/davekiss/exe-laravel
@@ -50,46 +49,14 @@ jobs:
 
           case "$STEP" in
             0)
-              # Step 0: Pure copy of exeuntu — preserves OCI index exactly
+              # Step 0: Pure crane copy of exeuntu (preserves OCI index)
               echo "--- Copying exeuntu as-is (no build) ---"
               crane copy ghcr.io/boldsoftware/exeuntu:latest $IMAGE:$TAG
               ;;
             1)
-              # Step 1: Bare FROM via Docker build
+              # Step 1: Docker build FROM exeuntu (no changes)
               cat > Dockerfile.test <<'EOF'
           FROM ghcr.io/boldsoftware/exeuntu:latest
-          EOF
-
-              echo "--- Dockerfile.test ---"
-              cat Dockerfile.test
-              echo "--- Building $IMAGE:$TAG (OCI format) ---"
-              docker buildx build -f Dockerfile.test \
-                --platform linux/amd64 \
-                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
-                --provenance=false \
-                --sbom=false \
-                .
-              ;;
-            2)
-              # Step 2: Use crane to mutate (add label) without Docker build
-              echo "--- Copying exeuntu + adding label via crane ---"
-              crane copy ghcr.io/boldsoftware/exeuntu:latest $IMAGE:$TAG
-              # crane mutate preserves the manifest structure
-              crane mutate $IMAGE:$TAG --label test=true --tag $IMAGE:$TAG
-              ;;
-            3)
-              # Step 3: Use crane append to add a layer
-              echo "--- Creating layer with touch /tmp/test ---"
-              mkdir -p layer/tmp
-              touch layer/tmp/test
-              tar -cf layer.tar -C layer .
-              crane append -f layer.tar -t $IMAGE:$TAG -b ghcr.io/boldsoftware/exeuntu:latest
-              ;;
-            4)
-              # Step 4: Docker build with apt install
-              cat > Dockerfile.test <<'EOF'
-          FROM ghcr.io/boldsoftware/exeuntu:latest
-          RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
           EOF
 
               echo "--- Dockerfile.test ---"
@@ -101,6 +68,32 @@ jobs:
                 --provenance=false \
                 --sbom=false \
                 .
+              ;;
+            5)
+              # Step 5: Plain ubuntu (NOT exeuntu) — test SSH injection
+              cat > Dockerfile.test <<'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
+          EXPOSE 22
+          CMD ["/usr/sbin/sshd", "-D"]
+          EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
+              ;;
+            6)
+              # Step 6: docker pull + tag + push (no buildx, standard Docker push)
+              echo "--- Pull exeuntu, retag, push via standard Docker ---"
+              docker pull --platform linux/amd64 ghcr.io/boldsoftware/exeuntu:latest
+              docker tag ghcr.io/boldsoftware/exeuntu:latest $IMAGE:$TAG
+              docker push $IMAGE:$TAG
               ;;
           esac
 
