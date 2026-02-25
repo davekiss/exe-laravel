@@ -16,6 +16,8 @@ on:
           - '7'
           - '8'
           - '9'
+          - '10'
+          - '11'
 
 env:
   IMAGE: ghcr.io/davekiss/exe-laravel
@@ -145,7 +147,6 @@ jobs:
               ;;
             9)
               # Step 9: Minimal ubuntu with simple CMD (no systemd)
-              # Marimo has no systemd and SSH works — test if systemd is the issue
               cat > Dockerfile.test <<'EOF'
           FROM ubuntu:24.04
           RUN apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*
@@ -162,6 +163,34 @@ jobs:
                 --provenance=false \
                 --sbom=false \
                 .
+              ;;
+            10)
+              # Step 10: ubuntu + exedev user + label (no services)
+              cat > Dockerfile.test <<'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update && apt-get install -y sudo python3 && rm -rf /var/lib/apt/lists/*
+          RUN usermod -l exedev -d /home/exedev -m ubuntu && \
+              groupmod -n exedev ubuntu && \
+              echo "exedev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+          LABEL exe.dev/login-user=exedev
+          EXPOSE 8080
+          CMD ["python3", "-m", "http.server", "8080"]
+          EOF
+              ;;
+            11)
+              # Step 11: ubuntu + exedev user + supervisor (no heavy services)
+              cat > Dockerfile.test <<'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update && apt-get install -y sudo supervisor nginx && rm -rf /var/lib/apt/lists/*
+          RUN usermod -l exedev -d /home/exedev -m ubuntu && \
+              groupmod -n exedev ubuntu && \
+              echo "exedev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+              chmod 711 /home/exedev
+          RUN usermod -aG exedev www-data
+          LABEL exe.dev/login-user=exedev
+          EXPOSE 80
+          CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
+          EOF
               ;;
           esac
 
