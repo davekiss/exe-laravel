@@ -15,6 +15,7 @@ on:
           - '6'
           - '7'
           - '8'
+          - '9'
 
 env:
   IMAGE: ghcr.io/davekiss/exe-laravel
@@ -130,6 +131,26 @@ jobs:
               echo "exedev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
           LABEL exe.dev/login-user=exedev
           CMD ["/sbin/init"]
+          EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
+              ;;
+            9)
+              # Step 9: Minimal ubuntu with simple CMD (no systemd)
+              # Marimo has no systemd and SSH works — test if systemd is the issue
+              cat > Dockerfile.test <<'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*
+          EXPOSE 8080
+          CMD ["python3", "-m", "http.server", "8080"]
           EOF
 
               echo "--- Dockerfile.test ---"
