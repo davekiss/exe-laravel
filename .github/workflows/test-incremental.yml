@@ -123,12 +123,12 @@ jobs:
               cat > Dockerfile.test <<'EOF'
           FROM ubuntu:24.04
           RUN apt-get update && \
-              apt-get install -y systemd systemd-sysv && \
+              apt-get install -y systemd systemd-sysv sudo && \
               rm -rf /var/lib/apt/lists/*
-          RUN useradd -m -s /bin/bash -u 1000 exedev && \
+          RUN usermod -l exedev -d /home/exedev -m ubuntu && \
+              groupmod -n exedev ubuntu && \
               echo "exedev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
           LABEL exe.dev/login-user=exedev
-          STOPSIGNAL SIGRTMIN+3
           CMD ["/sbin/init"]
           EOF
 
