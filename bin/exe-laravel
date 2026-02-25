@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TEMPLATE_VM="laravel-template"
-VERSION="0.4.0"
+IMAGE="ghcr.io/davekiss/exe-laravel:latest"
+VERSION="0.5.0"
 
 usage() {
     cat <<EOF
@@ -105,10 +105,10 @@ case "$cmd" in
         fi
 
         echo "Creating VM..."
-        ssh -o StrictHostKeyChecking=no exe.dev cp "$TEMPLATE_VM" "$name" || {
+        ssh -o StrictHostKeyChecking=no exe.dev new --name="$name" --image="$IMAGE" || {
             echo "Error: Failed to create VM."
             echo ""
-            echo "Make sure the template VM '$TEMPLATE_VM' exists."
+            echo "Make sure you have access to the image: $IMAGE"
             exit 1
         }
 
@@ -153,7 +153,6 @@ case "$cmd" in
         echo ""
         echo "  App:     https://${name}.exe.xyz"
         echo "  SSH:     ssh ${name}.exe.xyz"
-        echo "  Shelley: https://${name}.exe.xyz:9999/"
         echo ""
         echo "Your app is live. SSH in and start building:"
         echo "  ssh ${name}.exe.xyz"

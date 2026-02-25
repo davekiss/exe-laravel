@@ -38,12 +38,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push (OCI format)
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          platforms: linux/amd64
           tags: ${{ env.IMAGE }}:${{ steps.version.outputs.tag }}
           provenance: false
           sbom: false
-          outputs: type=image,oci-mediatypes=true
