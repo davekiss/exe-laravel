@@ -176,6 +176,16 @@ jobs:
           EXPOSE 8080
           CMD ["python3", "-m", "http.server", "8080"]
           EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
               ;;
             11)
               # Step 11: ubuntu + exedev user + supervisor (no heavy services)
@@ -191,6 +201,16 @@ jobs:
           EXPOSE 80
           CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
           EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
               ;;
           esac
 
