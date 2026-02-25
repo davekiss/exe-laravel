@@ -1,0 +1,83 @@
+name: Incremental Image Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      step:
+        description: 'Which step to build (1=bare, 2=label, 3=touch, 4=apt)'
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+
+env:
+  IMAGE: ghcr.io/davekiss/exe-laravel
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build step ${{ inputs.step }}
+        run: |
+          STEP="${{ inputs.step }}"
+          TAG="step${STEP}"
+
+          case "$STEP" in
+            1)
+              # Bare FROM — no changes at all
+              cat > Dockerfile.test <<'EOF'
+          FROM ghcr.io/boldsoftware/exeuntu:latest
+          EOF
+              ;;
+            2)
+              # Just a label — metadata only, no filesystem change
+              cat > Dockerfile.test <<'EOF'
+          FROM ghcr.io/boldsoftware/exeuntu:latest
+          LABEL test=true
+          EOF
+              ;;
+            3)
+              # Single RUN that touches a file
+              cat > Dockerfile.test <<'EOF'
+          FROM ghcr.io/boldsoftware/exeuntu:latest
+          RUN touch /tmp/test
+          EOF
+              ;;
+            4)
+              # Apt install a small package
+              cat > Dockerfile.test <<'EOF'
+          FROM ghcr.io/boldsoftware/exeuntu:latest
+          RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+          EOF
+              ;;
+          esac
+
+          echo "--- Dockerfile.test ---"
+          cat Dockerfile.test
+          echo "--- Building $IMAGE:$TAG ---"
+
+          docker build -f Dockerfile.test -t "$IMAGE:$TAG" .
+          docker push "$IMAGE:$TAG"
+
+          echo "--- Inspect manifest ---"
+          docker manifest inspect "$IMAGE:$TAG" | head -30
+
+          echo ""
+          echo "Test with: ssh exe.dev new --name=test-${TAG} --image=$IMAGE:$TAG"
