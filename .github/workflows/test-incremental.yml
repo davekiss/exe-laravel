@@ -13,6 +13,8 @@ on:
           - '1'
           - '5'
           - '6'
+          - '7'
+          - '8'
 
 env:
   IMAGE: ghcr.io/davekiss/exe-laravel
@@ -94,6 +96,51 @@ jobs:
               docker pull --platform linux/amd64 ghcr.io/boldsoftware/exeuntu:latest
               docker tag ghcr.io/boldsoftware/exeuntu:latest $IMAGE:$TAG
               docker push $IMAGE:$TAG
+              ;;
+            7)
+              # Step 7: FROM exeuntu but DISABLE openssh-server
+              # Theory: exe.dev injects its own sshd for non-exeuntu images,
+              # but exeuntu's OpenSSH on port 22 blocks it
+              cat > Dockerfile.test <<'EOF'
+          FROM ghcr.io/boldsoftware/exeuntu:latest
+          RUN systemctl disable ssh.service ssh.socket 2>/dev/null; \
+              systemctl mask ssh.service ssh.socket 2>/dev/null; \
+              true
+          EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
+              ;;
+            8)
+              # Step 8: Minimal ubuntu with systemd (like exeuntu but clean)
+              cat > Dockerfile.test <<'EOF'
+          FROM ubuntu:24.04
+          RUN apt-get update && \
+              apt-get install -y systemd systemd-sysv && \
+              rm -rf /var/lib/apt/lists/*
+          RUN useradd -m -s /bin/bash -u 1000 exedev && \
+              echo "exedev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+          LABEL exe.dev/login-user=exedev
+          STOPSIGNAL SIGRTMIN+3
+          CMD ["/sbin/init"]
+          EOF
+
+              echo "--- Dockerfile.test ---"
+              cat Dockerfile.test
+              echo "--- Building $IMAGE:$TAG ---"
+              docker buildx build -f Dockerfile.test \
+                --platform linux/amd64 \
+                --output type=image,name=$IMAGE:$TAG,push=true,oci-mediatypes=true \
+                --provenance=false \
+                --sbom=false \
+                .
               ;;
           esac
 
