@@ -53,7 +53,7 @@ These flags are passed directly to `laravel new`. Any flag supported by `laravel
 
 ## How It Works
 
-Each VM is cloned from a pre-configured template with all infrastructure installed. No app is baked in — the Laravel app is created at runtime via `laravel new`.
+Each VM is created from a Docker image with all infrastructure pre-installed. No app is baked in — the Laravel app is created at runtime via `laravel new`.
 
 **What's in each VM:**
 
@@ -66,6 +66,4 @@ Each VM is cloned from a pre-configured template with all infrastructure install
 - Redis
 - AGENTS.md for coding agents
 
-When you run `exe-laravel new`, the CLI clones the template VM (~2 seconds), waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.
-
-Built on [exeuntu](https://github.com/boldsoftware/exeuntu) — includes Shelley, Claude Code, Codex, Docker, and more.
+When you run `exe-laravel new`, the CLI creates a VM from the image, waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.

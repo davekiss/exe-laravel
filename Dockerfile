@@ -1,7 +1,6 @@
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
-# Note: exe.dev/login-user label added after user setup is verified
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 

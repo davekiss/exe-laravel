@@ -97,7 +97,6 @@ case "$cmd" in
 
         check_exe_dev
 
-        # Clone the golden template VM
         if [[ -z "$name" ]]; then
             echo "Error: VM name is required."
             echo "Usage: exe-laravel new <name> [flags]"
@@ -111,9 +110,6 @@ case "$cmd" in
             echo "Make sure you have access to the image: $IMAGE"
             exit 1
         }
-
-        # Point exe.dev proxy to nginx on port 8080
-        ssh -o StrictHostKeyChecking=no exe.dev share port "$name" 8080 2>/dev/null || true
 
         # Wait for SSH to become available
         echo "Waiting for SSH..."
@@ -132,19 +128,19 @@ case "$cmd" in
             echo ""
             echo "Try connecting manually:"
             echo "  ssh ${name}.exe.xyz"
-            echo "  laravel-setup ${setup_flags[*]:-}"
+            echo "  sudo -u exedev laravel-setup ${setup_flags[*]:-}"
             exit 1
         fi
 
         # Run laravel-setup on the VM with collected flags
         echo "Setting up Laravel..."
-        ssh -o StrictHostKeyChecking=no "${name}.exe.xyz" "laravel-setup ${setup_flags[*]:-}" || {
+        ssh -o StrictHostKeyChecking=no "${name}.exe.xyz" "sudo -u exedev laravel-setup ${setup_flags[*]:-}" || {
             echo ""
             echo "Error: Laravel setup failed."
             echo ""
             echo "The VM is running. You can retry manually:"
             echo "  ssh ${name}.exe.xyz"
-            echo "  laravel-setup ${setup_flags[*]:-}"
+            echo "  sudo -u exedev laravel-setup ${setup_flags[*]:-}"
             exit 1
         }
 
@@ -162,7 +158,7 @@ case "$cmd" in
         ;;
     list)
         result=$(ssh exe.dev ls --json)
-        echo "$result" | jq -r ".vms[] | select(.vm_name != \"$TEMPLATE_VM\") | \"\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz\"" | column -t -s $'\t'
+        echo "$result" | jq -r ".vms[] | \"\(.vm_name)\t\(.status)\thttps://\(.vm_name).exe.xyz\"" | column -t -s $'\t'
         ;;
     ssh)
         name="${1:?Usage: exe-laravel ssh <name>}"
