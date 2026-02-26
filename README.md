@@ -21,6 +21,12 @@ exe-laravel new my-app --livewire
 exe-laravel open my-app
 ```
 
+Your app is immediately live at `https://<name>.exe.xyz`. SSH in and start building:
+
+```bash
+ssh my-app.exe.xyz
+```
+
 ## Commands
 
 | Command | Description |
@@ -35,7 +41,6 @@ exe-laravel open my-app
 | `exe-laravel clone <name> [new]` | Copy a VM |
 | `exe-laravel logs <name>` | Tail Laravel logs |
 | `exe-laravel artisan <name> <cmd>` | Run artisan remotely |
-| `exe-laravel agent <name>` | Open Shelley |
 
 ## Starter Kit Flags
 
@@ -58,12 +63,32 @@ Each VM is created from a Docker image with all infrastructure pre-installed. No
 **What's in each VM:**
 
 - PHP 8.4 + php-fpm
-- PostgreSQL 16
+- PostgreSQL 16 + pgvector
 - nginx
-- Composer
-- Laravel installer
+- Composer + Laravel installer
 - Node.js 22 + npm
 - Redis
-- AGENTS.md for coding agents
+- Resend mail driver (pre-configured)
+- [Laravel Boost](https://github.com/laravel/boost) for AI-assisted development
 
 When you run `exe-laravel new`, the CLI creates a VM from the image, waits for SSH, then runs `laravel new` with your chosen flags. The app is created at `/home/exedev/app` with PostgreSQL configured, migrations run, and git initialized.
+
+## AI-Ready
+
+Every VM is pre-configured for building AI-native Laravel apps:
+
+- **[Laravel AI SDK](https://github.com/laravel/ai)** — pgvector is installed and the `vector` extension is enabled. Just `composer require laravel/ai` and start using agents, embeddings, structured output, and more.
+- **[Laravel MCP](https://github.com/laravel/mcp)** — expose your app's capabilities to AI clients via the Model Context Protocol. `composer require laravel/mcp` to get started.
+- **[Laravel Boost](https://github.com/laravel/boost)** — included by default. Provides MCP tools for inspecting your app, querying the database, and searching Laravel docs.
+
+## Workflow
+
+Each VM is a live server. There is no deployment pipeline. Create a VM, SSH in, and start coding — changes are immediately live.
+
+```bash
+exe-laravel new my-app --react     # create VM + install Laravel
+ssh my-app.exe.xyz                 # SSH in and start building
+# edit code, run artisan/npm — app is always live
+```
+
+The app lives at `/home/exedev/app`. PHP changes are instant. Run `npm run build` after frontend changes. See `AGENTS.md` in the app root for full environment details.

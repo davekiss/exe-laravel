@@ -58,9 +58,9 @@ RUN sed -i 's/^user = www-data/user = exedev/' /etc/php/8.4/fpm/pool.d/www.conf 
     sed -i 's/^listen.group = www-data/listen.group = exedev/' /etc/php/8.4/fpm/pool.d/www.conf && \
     mkdir -p /run/php && chown exedev:exedev /run/php
 
-# Install PostgreSQL 16
+# Install PostgreSQL 16 + pgvector (for Laravel AI SDK vector embeddings)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    apt-get install -y postgresql postgresql-client && \
+    apt-get install -y postgresql postgresql-client postgresql-16-pgvector && \
     rm -rf /var/lib/apt/lists/*
 
 # Configure PostgreSQL: trust auth for local TCP (no password)
