@@ -13,7 +13,7 @@ Changes you make are immediately visible at the VM's public URL.
 - **Cache/Queue:** Redis
 - **Node.js:** 22 LTS with npm
 - **Frontend:** Vite (run `npm run dev` for HMR or `npm run build` for production)
-- **Process manager:** supervisord (not systemd)
+- **Init system:** systemd
 
 ## Common Commands
 
@@ -34,17 +34,18 @@ php artisan migrate:fresh --seed # reset database
 npm run dev                     # Vite dev server with HMR
 npm run build                   # production build
 
-# Services (managed by supervisord)
-sudo supervisorctl restart nginx
-sudo supervisorctl restart php-fpm
-sudo supervisorctl restart postgresql
-sudo supervisorctl restart redis
-sudo supervisorctl status       # see all service statuses
+# Services
+sudo systemctl restart nginx
+sudo systemctl restart php8.4-fpm
+sudo systemctl restart postgresql
+sudo systemctl restart redis-server
+sudo systemctl status nginx php8.4-fpm postgresql redis-server
 
 # Logs
 tail -f /home/exedev/app/storage/logs/laravel.log
-sudo tail -f /var/log/supervisor/nginx-*.log
-sudo tail -f /var/log/supervisor/php-fpm-*.log
+sudo journalctl -u nginx -f
+sudo journalctl -u php8.4-fpm -f
+sudo journalctl -u postgresql -f
 ```
 
 ## Laravel AI SDK

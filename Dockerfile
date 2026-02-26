@@ -4,10 +4,9 @@ LABEL org.opencontainers.image.source=https://github.com/davekiss/exe-laravel
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
-# Base packages + supervisor
+# Base packages
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y \
-        supervisor \
         nginx \
         curl \
         git \
@@ -99,17 +98,21 @@ RUN chmod +x /usr/local/bin/laravel-setup
 COPY scripts/laravel-boot.sh /usr/local/bin/laravel-boot.sh
 RUN chmod +x /usr/local/bin/laravel-boot.sh
 
+# Copy exe-init script (initializes runtime dirs and PostgreSQL data)
+COPY scripts/exe-init.sh /usr/local/bin/exe-init.sh
+RUN chmod +x /usr/local/bin/exe-init.sh
+
 # Store AGENTS.md template for runtime copy
 RUN mkdir -p /usr/local/share/exe-laravel
 COPY config/AGENTS.md /usr/local/share/exe-laravel/AGENTS.md
 
-# Supervisord config
-COPY config/supervisord.conf /etc/supervisor/conf.d/laravel.conf
+# Install systemd service files
+COPY config/exe-init.service /etc/systemd/system/exe-init.service
+COPY config/laravel-boot.service /etc/systemd/system/laravel-boot.service
 
-# Entrypoint: initialize services then start supervisor
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Enable all services to start on boot
+RUN systemctl enable postgresql redis-server php8.4-fpm nginx exe-init laravel-boot
 
 EXPOSE 80 8080
 
-CMD ["/usr/local/bin/entrypoint.sh"]
+CMD ["/sbin/init"]

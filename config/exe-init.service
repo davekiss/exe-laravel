@@ -1,0 +1,12 @@
+[Unit]
+Description=Initialize exe.dev runtime environment
+Before=postgresql.service php8.4-fpm.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/exe-init.sh
+
+[Install]
+WantedBy=multi-user.target
